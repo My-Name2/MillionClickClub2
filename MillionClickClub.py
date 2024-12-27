@@ -2,16 +2,11 @@ import streamlit as st
 import random
 import time
 import requests
-import os
-from dotenv import load_dotenv
 import re
 
-# Load environment variables from .env
-load_dotenv()
-
-# Discord bot token and channel ID
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
+# Load Discord bot token and channel ID from Streamlit secrets
+DISCORD_BOT_TOKEN = st.secrets["discord"]["bot_token"]
+DISCORD_CHANNEL_ID = st.secrets["discord"]["channel_id"]
 
 # Prohibited words and patterns
 PROHIBITED_WORDS = ["badword1", "badword2", "offensivephrase"]
@@ -22,18 +17,15 @@ PROHIBITED_PATTERNS = [
 
 # Function to validate a message
 def validate_message(message):
-    # Check for prohibited words
     for word in PROHIBITED_WORDS:
         if word.lower() in message.lower():
             return False, f"Message contains prohibited word: {word}"
 
-    # Check for prohibited patterns (e.g., URLs, image links)
     for pattern in PROHIBITED_PATTERNS:
         if re.search(pattern, message):
             return False, "Message contains a prohibited URL or file type."
 
-    # Check message length
-    if len(message) > 500:  # Limit message length to 500 characters
+    if len(message) > 500:
         return False, "Message is too long. Keep it under 500 characters."
 
     return True, None
@@ -52,7 +44,7 @@ def send_message_to_channel(message):
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code == 200:
-        return response.json()  # Message successfully sent
+        return response.json()
     elif response.status_code == 403:
         raise Exception("Missing Permissions: Ensure the bot has the 'Send Messages' permission.")
     else:
@@ -106,10 +98,10 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 
 if st.button("Click to try your luck"):
     st.session_state.click_count += 1
-    random_number = random.randint(1, 10)  # Adjust odds here
+    random_number = random.randint(1, 10)
     if random_number == 1:
         st.success("🎉 You won! Generating your invite...")
-        time.sleep(2)  # Simulate invite generation delay
+        time.sleep(2)
         try:
             invite_link = create_invite()
             st.write(f"[Click here to join the Discord!]({invite_link})")
@@ -127,7 +119,6 @@ user_name = st.text_input("Your Username (Optional):", "")
 user_message = st.text_input("Enter your message:")
 if st.button("Send Message"):
     if user_message.strip():
-        # Validate the message
         is_valid, error_message = validate_message(user_message)
         if is_valid:
             try:
@@ -136,7 +127,6 @@ if st.button("Send Message"):
             except Exception as e:
                 st.error(f"Failed to send message: {e}")
         else:
-            # Log flagged message
             if user_name:
                 log_flagged_message(user_name, user_message)
             st.error(error_message)
