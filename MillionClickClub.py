@@ -71,22 +71,6 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Function to log flagged messages to the moderation channel
-def log_flagged_message(user, message):
-    url = f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
-    headers = {
-        "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "content": f"🚨 **Flagged Message** 🚨\n**User:** {user}\n**Content:** {message}"
-    }
-
-    response = requests.post(url, headers=headers, json=payload)
-    if response.status_code != 200:
-        error = response.json()
-        raise Exception(f"Failed to log message: {response.status_code} - {error.get('message', 'Unknown error')}")
-
 # Initialize click counter
 if "click_count" not in st.session_state:
     st.session_state.click_count = 0
@@ -102,8 +86,11 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 
 if st.button("Click to try your luck"):
     st.session_state.click_count += 1
-    random_number = random.randint(1, 10)
-    if random_number == 1:
+    user_number = random.randint(1, 1000000)
+    winning_number = random.randint(1, 1000000)
+    st.write(f"🎲 Your number: **{user_number}**")
+    st.write(f"🏆 Winning number: **{winning_number}**")
+    if user_number == winning_number:
         st.success("🎉 You won! Generating your invite...")
         time.sleep(2)
         try:
@@ -112,7 +99,7 @@ if st.button("Click to try your luck"):
         except Exception as e:
             st.error(f"Error generating invite: {e}")
     else:
-        st.error(f"Not this time! Your number was {random_number}. Try again!")
+        st.error("Not this time! Better luck next time!")
 
 st.write("Keep trying—maybe you'll hit the jackpot!")
 
