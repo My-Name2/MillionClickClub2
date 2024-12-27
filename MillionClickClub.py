@@ -5,10 +5,8 @@ import requests
 import re
 
 # Load Discord bot token and channel ID from Streamlit secrets
-# Load Discord bot token and channel ID from Streamlit secrets
 DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
 DISCORD_CHANNEL_ID = st.secrets["DISCORD_CHANNEL_ID"]
-
 
 # Prohibited words and patterns
 PROHIBITED_WORDS = ["badword1", "badword2", "offensivephrase"]
@@ -50,7 +48,8 @@ def send_message_to_channel(message):
     elif response.status_code == 403:
         raise Exception("Missing Permissions: Ensure the bot has the 'Send Messages' permission.")
     else:
-        raise Exception(f"Failed to send message: {response.status_code} - {response.text}")
+        error = response.json()
+        raise Exception(f"Failed to send message: {response.status_code} - {error.get('message', 'Unknown error')}")
 
 # Function to create a one-time-use invite link
 def create_invite():
@@ -59,7 +58,8 @@ def create_invite():
         "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
         "Content-Type": "application/json"
     }
-    payload = {"max_age": 30, "max_uses": 1}
+    payload = {"max_age": 30, "max_uses": 1}  # Expires in 30 seconds, one-time use
+
     response = requests.post(url, headers=headers, json=payload)
 
     if response.status_code == 200:
@@ -68,7 +68,8 @@ def create_invite():
     elif response.status_code == 403:
         raise Exception("Missing Permissions: Ensure the bot has the 'Create Instant Invite' permission.")
     else:
-        raise Exception(f"Failed to create invite: {response.status_code} - {response.text}")
+        error = response.json()
+        raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
 # Function to log flagged messages to the moderation channel
 def log_flagged_message(user, message):
@@ -83,7 +84,8 @@ def log_flagged_message(user, message):
 
     response = requests.post(url, headers=headers, json=payload)
     if response.status_code != 200:
-        raise Exception(f"Failed to log message: {response.status_code} - {response.text}")
+        error = response.json()
+        raise Exception(f"Failed to log message: {response.status_code} - {error.get('message', 'Unknown error')}")
 
 # Initialize click counter
 if "click_count" not in st.session_state:
