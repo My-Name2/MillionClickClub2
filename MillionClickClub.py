@@ -17,6 +17,9 @@ PROHIBITED_PATTERNS = [
 
 # Function to validate a message
 def validate_message(message):
+    if len(message) > 100:  # Check message length
+        return False, "Message is too long. Keep it under 100 characters."
+
     for word in PROHIBITED_WORDS:
         if word.lower() in message.lower():
             return False, f"Message contains prohibited word: {word}"
@@ -24,9 +27,6 @@ def validate_message(message):
     for pattern in PROHIBITED_PATTERNS:
         if re.search(pattern, message):
             return False, "Message contains a prohibited URL or file type."
-
-    if len(message) > 500:
-        return False, "Message is too long. Keep it under 500 characters."
 
     return True, None
 
@@ -125,8 +125,6 @@ if st.button("Send Message"):
             except Exception as e:
                 st.error(f"Failed to send message: {e}")
         else:
-            if user_name:
-                log_flagged_message(user_name, user_message)
             st.error(error_message)
     else:
         st.error("Message cannot be empty!")
