@@ -5,8 +5,10 @@ import requests
 import re
 
 # Load Discord bot token and channel ID from Streamlit secrets
-DISCORD_BOT_TOKEN = st.secrets["discord"]["bot_token"]
-DISCORD_CHANNEL_ID = st.secrets["discord"]["channel_id"]
+# Load Discord bot token and channel ID from Streamlit secrets
+DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
+DISCORD_CHANNEL_ID = st.secrets["DISCORD_CHANNEL_ID"]
+
 
 # Prohibited words and patterns
 PROHIBITED_WORDS = ["badword1", "badword2", "offensivephrase"]
