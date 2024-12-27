@@ -17,8 +17,8 @@ PROHIBITED_PATTERNS = [
 
 # Function to validate a message
 def validate_message(message):
-    if len(message) > 100:  # Check message length
-        return False, "Message is too long. Keep it under 100 characters."
+    if len(message) > 200:  # Check message length
+        return False, "Message is too long. Keep it under 200 characters."
 
     for word in PROHIBITED_WORDS:
         if word.lower() in message.lower():
