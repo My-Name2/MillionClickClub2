@@ -31,7 +31,11 @@ def validate_message(message):
     return True, None
 
 # Function to send a message to the Discord channel
-def send_message_to_channel(message):
+def send_message_to_channel(message, username=""):
+    # Append the username to the message
+    if username.strip():
+        message = f"{message} - {username}"
+    
     url = f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
     headers = {
         "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
@@ -82,7 +86,10 @@ st.write(
     "If you win, you'll get a one-time-use invite link valid for 30 seconds!"
 )
 
+# Calculate likelihood
 st.write(f"Total clicks so far: **{st.session_state.click_count}**")
+probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
+st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
 if st.button("Click to try your luck"):
     st.session_state.click_count += 1
@@ -113,7 +120,7 @@ if st.button("Send Message"):
         is_valid, error_message = validate_message(user_message)
         if is_valid:
             try:
-                send_message_to_channel(user_message)
+                send_message_to_channel(user_message, username=user_name)
                 st.success("Message sent to the server!")
             except Exception as e:
                 st.error(f"Failed to send message: {e}")
