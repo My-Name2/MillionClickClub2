@@ -91,7 +91,7 @@ st.write(
 
 # Calculate likelihood
 st.write(f"Total clicks so far: **{st.session_state.click_count}**")
-probability = 10000000 - ((999999 / 1000000) ** st.session_state.click_count)
+probability = 1 - ((9 / 10) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
 # Generate invite button logic
