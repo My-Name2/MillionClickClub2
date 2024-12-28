@@ -17,8 +17,8 @@ PROHIBITED_PATTERNS = [
 
 # Function to validate a message
 def validate_message(message):
-    if len(message) > 200:  # Check message length
-        return False, "Message is too long. Keep it under 200 characters."
+    if len(message) > 100:  # Check message length
+        return False, "Message is too long. Keep it under 100 characters."
 
     for word in PROHIBITED_WORDS:
         if word.lower() in message.lower():
@@ -32,7 +32,6 @@ def validate_message(message):
 
 # Function to send a message to the Discord channel
 def send_message_to_channel(message, username=""):
-    # Append the username to the message
     if username.strip():
         message = f"{message} - {username}"
     
@@ -62,7 +61,7 @@ def create_invite():
         "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
         "Content-Type": "application/json"
     }
-    payload = {"max_age": 30, "max_uses": 1}  # Expires in 30 seconds, one-time use
+    payload = {"max_age": 30, "max_uses": 1}
 
     response = requests.post(url, headers=headers, json=payload)
 
@@ -75,9 +74,13 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Initialize click counter
+# Initialize session state variables
 if "click_count" not in st.session_state:
     st.session_state.click_count = 0
+if "invite_generated" not in st.session_state:
+    st.session_state.invite_generated = False
+if "invite_link" not in st.session_state:
+    st.session_state.invite_link = None
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -91,24 +94,31 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-if st.button("Click to try your luck"):
-    st.session_state.click_count += 1
-    user_number = random.randint(1, 1000000)
-    winning_number = random.randint(1, 1000000)
-    st.write(f"🎲 Your number: **{user_number}**")
-    st.write(f"🏆 Winning number: **{winning_number}**")
-    if user_number == winning_number:
-        st.success("🎉 You won! Generating your invite...")
-        time.sleep(2)
-        try:
-            invite_link = create_invite()
-            st.write(f"[Click here to join the Discord!]({invite_link})")
-        except Exception as e:
-            st.error(f"Error generating invite: {e}")
-    else:
-        st.error("Not this time! Better luck next time!")
+# Generate invite button logic
+if not st.session_state.invite_generated:
+    if st.button("Click to try your luck"):
+        st.session_state.click_count += 1
+        user_number = random.randint(1, 1000000)
+        winning_number = random.randint(1, 1000000)
+        st.write(f"🎲 Your number: **{user_number}**")
+        st.write(f"🏆 Winning number: **{winning_number}**")
+        if user_number == winning_number:
+            st.success("🎉 You won! Generating your invite...")
+            time.sleep(2)
+            try:
+                invite_link = create_invite()
+                st.session_state.invite_generated = True
+                st.session_state.invite_link = invite_link
+                st.write(f"[Click here to join the Discord!]({invite_link})")
+            except Exception as e:
+                st.error(f"Error generating invite: {e}")
+        else:
+            st.error("Not this time! Better luck next time!")
 
-st.write("Keep trying—maybe you'll hit the jackpot!")
+# Display invite link if generated
+if st.session_state.invite_generated:
+    st.write(f"[Your invite link (valid for 30 seconds)]({st.session_state.invite_link})")
+    st.info("Refresh the page to try again.")
 
 # User Message Input
 st.write("---")
