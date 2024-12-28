@@ -101,8 +101,8 @@ if st.button("Click to try your luck"):
         st.session_state.link_active = False  # Reset active link state
 
     st.session_state.click_count += 1
-    user_number = random.randint(1, 10)
-    winning_number = random.randint(1, 10)
+    user_number = random.randint(1, 1000000)
+    winning_number = random.randint(1, 1000000)
     st.write(f"🎲 Your number: **{user_number}**")
     st.write(f"🏆 Winning number: **{winning_number}**")
     if user_number == winning_number:
