@@ -77,10 +77,6 @@ def create_invite():
 # Initialize session state variables
 if "click_count" not in st.session_state:
     st.session_state.click_count = 0
-if "missed_links" not in st.session_state:
-    st.session_state.missed_links = 0
-if "link_active" not in st.session_state:
-    st.session_state.link_active = False
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -95,11 +91,6 @@ probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
 if st.button("Click to try your luck"):
-    # Automatically track missed links if there was an active link
-    if st.session_state.link_active:
-        st.session_state.missed_links += 1
-        st.session_state.link_active = False  # Reset active link state
-
     st.session_state.click_count += 1
     user_number = random.randint(1, 1000000)
     winning_number = random.randint(1, 1000000)
@@ -110,15 +101,11 @@ if st.button("Click to try your luck"):
         time.sleep(2)
         try:
             invite_link = create_invite()
-            st.session_state.link_active = True  # Mark the link as active
             st.write(f"[Click here to join the Discord!]({invite_link})")
         except Exception as e:
             st.error(f"Error generating invite: {e}")
     else:
         st.error("Not this time! Better luck next time!")
-
-# Display missed links count
-st.write(f"🚫 Missed links count: **{st.session_state.missed_links}**")
 
 # User Message Input
 st.write("---")
