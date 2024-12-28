@@ -77,10 +77,8 @@ def create_invite():
 # Initialize session state variables
 if "click_count" not in st.session_state:
     st.session_state.click_count = 0
-if "invite_generated" not in st.session_state:
-    st.session_state.invite_generated = False
-if "invite_link" not in st.session_state:
-    st.session_state.invite_link = None
+if "missed_links" not in st.session_state:
+    st.session_state.missed_links = 0
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -94,31 +92,30 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-# Generate invite button logic
-if not st.session_state.invite_generated:
-    if st.button("Click to try your luck"):
-        st.session_state.click_count += 1
-        user_number = random.randint(1, 10)
-        winning_number = random.randint(1, 10)
-        st.write(f"🎲 Your number: **{user_number}**")
-        st.write(f"🏆 Winning number: **{winning_number}**")
-        if user_number == winning_number:
-            st.success("🎉 You won! Generating your invite...")
-            time.sleep(2)
-            try:
-                invite_link = create_invite()
-                st.session_state.invite_generated = True
-                st.session_state.invite_link = invite_link
-                st.write(f"[Click here to join the Discord!]({invite_link})")
-            except Exception as e:
-                st.error(f"Error generating invite: {e}")
+if st.button("Click to try your luck"):
+    st.session_state.click_count += 1
+    user_number = random.randint(1, 10)
+    winning_number = random.randint(1, 10)
+    st.write(f"🎲 Your number: **{user_number}**")
+    st.write(f"🏆 Winning number: **{winning_number}**")
+    if user_number == winning_number:
+        st.success("🎉 You won! Generating your invite...")
+        time.sleep(2)
+        try:
+            invite_link = create_invite()
+            st.write(f"[Click here to join the Discord!]({invite_link})")
+        except Exception as e:
+            st.error(f"Error generating invite: {e}")
         else:
-            st.error("Not this time! Better luck next time!")
+            # If the user wins but clicks again too soon, increment missed links
+            if st.button("Missed it? Click to acknowledge"):
+                st.session_state.missed_links += 1
+                st.warning("Missed link acknowledged. Better luck next time!")
+    else:
+        st.error("Not this time! Better luck next time!")
 
-# Display invite link if generated
-if st.session_state.invite_generated:
-    st.write(f"[Your invite link (valid for 30 seconds)]({st.session_state.invite_link})")
-    st.info("Refresh the page to try again.")
+# Display missed links count
+st.write(f"🚫 Missed links count: **{st.session_state.missed_links}**")
 
 # User Message Input
 st.write("---")
