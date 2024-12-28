@@ -91,15 +91,15 @@ st.write(
 
 # Calculate likelihood
 st.write(f"Total clicks so far: **{st.session_state.click_count}**")
-probability = 1 - ((9 / 10) ** st.session_state.click_count)
+probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
 # Generate invite button logic
 if not st.session_state.invite_generated:
     if st.button("Click to try your luck"):
         st.session_state.click_count += 1
-        user_number = random.randint(1, 1000000)
-        winning_number = random.randint(1, 1000000)
+        user_number = random.randint(1, 10)
+        winning_number = random.randint(1, 10)
         st.write(f"🎲 Your number: **{user_number}**")
         st.write(f"🏆 Winning number: **{winning_number}**")
         if user_number == winning_number:
