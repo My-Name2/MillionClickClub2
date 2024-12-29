@@ -1,7 +1,8 @@
 import streamlit as st
 import random
 import time
-import threading
+import requests
+import re
 
 # Load Discord bot token and channel ID from Streamlit secrets
 DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
@@ -13,24 +14,6 @@ PROHIBITED_PATTERNS = [
     r"https?://[^\s]+",  # Matches URLs (http:// or https://)
     r"\.(jpg|png|gif|jpeg|bmp|webp)$"  # Matches image file extensions
 ]
-
-# Initialize session state variables
-if "click_count" not in st.session_state:
-    st.session_state.click_count = 0
-if "points" not in st.session_state:
-    st.session_state.points = 0
-if "auto_clickers" not in st.session_state:
-    st.session_state.auto_clickers = 0
-if "auto_clicker_cost" not in st.session_state:
-    st.session_state.auto_clicker_cost = 100
-if "shop_message" not in st.session_state:
-    st.session_state.shop_message = ""
-if "auto_click_goal" not in st.session_state:
-    st.session_state.auto_click_goal = 1_000_000_000
-if "auto_clicker_active" not in st.session_state:
-    st.session_state.auto_clicker_active = False
-if "special_link_generated" not in st.session_state:
-    st.session_state.special_link_generated = False
 
 # Function to validate a message
 def validate_message(message):
@@ -91,44 +74,11 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Auto-clicker background function
-def auto_clicker_loop():
-    while True:
-        if st.session_state.auto_clickers > 0:
-            st.session_state.click_count += st.session_state.auto_clickers
-            st.session_state.points += st.session_state.auto_clickers
-            if st.session_state.click_count >= st.session_state.auto_click_goal and not st.session_state.special_link_generated:
-                try:
-                    link = create_invite()
-                    st.session_state.special_link_generated = True
-                    st.write(f"🎉 **Auto-Clickers reached the goal!** [Click here to join the Discord!]({link})")
-                except Exception as e:
-                    st.error(f"Error generating the special link: {e}")
-        time.sleep(1)  # Click every second
-
-# Start auto-clicker thread if not already active
-if not st.session_state.auto_clicker_active:
-    st.session_state.auto_clicker_active = True
-    threading.Thread(target=auto_clicker_loop, daemon=True).start()
-
-# Shop logic for auto-clickers
-def auto_clicker_shop():
-    st.write("### Auto-Clicker Menu")
-    st.write(f"**Points:** {st.session_state.points}")
-    st.write(f"**Auto-Clickers Owned:** {st.session_state.auto_clickers}")
-    st.write(f"**Next Auto-Clicker Cost:** {st.session_state.auto_clicker_cost} points")
-    st.write(f"**Auto-Clicker Goal:** {st.session_state.auto_click_goal} clicks")
-
-    if st.button("Buy Auto-Clicker"):
-        if st.session_state.points >= st.session_state.auto_clicker_cost:
-            st.session_state.points -= st.session_state.auto_clicker_cost
-            st.session_state.auto_clickers += 1
-            st.session_state.auto_clicker_cost = int(st.session_state.auto_clicker_cost * 1.5)  # Exponential cost
-            st.session_state.shop_message = "Successfully purchased an Auto-Clicker!"
-        else:
-            st.session_state.shop_message = "Not enough points for an Auto-Clicker."
-
-    st.info(st.session_state.shop_message)
+# Initialize session state variables
+if "click_count" not in st.session_state:
+    st.session_state.click_count = 0
+if "link_generated" not in st.session_state:
+    st.session_state.link_generated = False
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -142,26 +92,27 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-if st.button("Click to try your luck"):
-    st.session_state.click_count += 1
-    st.session_state.points += 1
-    user_number = random.randint(1, 1000000)
-    winning_number = random.randint(1, 1000000)
-    st.write(f"🎲 Your number: **{user_number}**")
-    st.write(f"🏆 Winning number: **{winning_number}**")
-    if user_number == winning_number:
-        st.success("🎉 You won! Generating your invite...")
-        time.sleep(2)
-        try:
-            invite_link = create_invite()
-            st.write(f"[Click here to join the Discord!]({invite_link})")
-        except Exception as e:
-            st.error(f"Error generating invite: {e}")
-    else:
-        st.error("Not this time! Better luck next time!")
-
-# Display auto-clicker menu
-auto_clicker_shop()
+# Disable button if a link has already been generated
+if not st.session_state.link_generated:
+    if st.button("Click to try your luck"):
+        st.session_state.click_count += 1
+        user_number = random.randint(1, 2)
+        winning_number = random.randint(1, 2)
+        st.write(f"🎲 Your number: **{user_number}**")
+        st.write(f"🏆 Winning number: **{winning_number}**")
+        if user_number == winning_number:
+            st.success("🎉 You won! Generating your invite...")
+            time.sleep(2)
+            try:
+                invite_link = create_invite()
+                st.session_state.link_generated = True  # Mark the link as generated
+                st.write(f"[Click here to join the Discord!]({invite_link})")
+            except Exception as e:
+                st.error(f"Error generating invite: {e}")
+        else:
+            st.error("Not this time! Better luck next time!")
+else:
+    st.info("You already generated an invite! Refresh the page to try again.")
 
 # User Message Input
 st.write("---")
