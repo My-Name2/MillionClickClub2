@@ -3,7 +3,6 @@ import random
 import time
 import requests
 import re
-from datetime import datetime, timedelta
 
 # Load Discord bot token and channel ID from Streamlit secrets
 DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
@@ -25,8 +24,6 @@ if "auto_clickers" not in st.session_state:
     st.session_state.auto_clickers = 0
 if "click_multiplier" not in st.session_state:
     st.session_state.click_multiplier = 1
-if "cooldown_until" not in st.session_state:
-    st.session_state.cooldown_until = None
 if "shop_message" not in st.session_state:
     st.session_state.shop_message = ""
 
@@ -89,15 +86,6 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Function to handle random events
-def random_event():
-    event_roll = random.randint(1, 100)
-    if event_roll <= 5:  # 5% chance for a random event
-        cooldown_time = random.randint(5, 15)  # Cooldown for 5 to 15 seconds
-        st.session_state.cooldown_until = datetime.now() + timedelta(seconds=cooldown_time)
-        return f"A random event occurred! Clicking is disabled for {cooldown_time} seconds."
-    return None
-
 # Shop logic
 def shop():
     st.write("### Shop")
@@ -139,34 +127,23 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-# Check for cooldown
-if st.session_state.cooldown_until and datetime.now() < st.session_state.cooldown_until:
-    st.warning(f"Clicking disabled until {st.session_state.cooldown_until.strftime('%H:%M:%S')}.")
-else:
-    if st.session_state.cooldown_until:
-        st.session_state.cooldown_until = None  # Reset cooldown
-
-    if st.button("Click to try your luck"):
-        random_event_message = random_event()
-        if random_event_message:
-            st.warning(random_event_message)
-        else:
-            st.session_state.click_count += 1
-            st.session_state.points += st.session_state.click_multiplier
-            user_number = random.randint(1, 1000000)
-            winning_number = random.randint(1, 1000000)
-            st.write(f"🎲 Your number: **{user_number}**")
-            st.write(f"🏆 Winning number: **{winning_number}**")
-            if user_number == winning_number:
-                st.success("🎉 You won! Generating your invite...")
-                time.sleep(2)
-                try:
-                    invite_link = create_invite()
-                    st.write(f"[Click here to join the Discord!]({invite_link})")
-                except Exception as e:
-                    st.error(f"Error generating invite: {e}")
-            else:
-                st.error("Not this time! Better luck next time!")
+if st.button("Click to try your luck"):
+    st.session_state.click_count += 1
+    st.session_state.points += st.session_state.click_multiplier
+    user_number = random.randint(1, 1000000)
+    winning_number = random.randint(1, 1000000)
+    st.write(f"🎲 Your number: **{user_number}**")
+    st.write(f"🏆 Winning number: **{winning_number}**")
+    if user_number == winning_number:
+        st.success("🎉 You won! Generating your invite...")
+        time.sleep(2)
+        try:
+            invite_link = create_invite()
+            st.write(f"[Click here to join the Discord!]({invite_link})")
+        except Exception as e:
+            st.error(f"Error generating invite: {e}")
+    else:
+        st.error("Not this time! Better luck next time!")
 
 # Display shop
 shop()
