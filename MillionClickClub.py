@@ -3,6 +3,7 @@ import random
 import time
 import requests
 import re
+from threading import Timer
 
 # Load Discord bot token and channel ID from Streamlit secrets
 DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
@@ -22,8 +23,8 @@ if "points" not in st.session_state:
     st.session_state.points = 0
 if "auto_clickers" not in st.session_state:
     st.session_state.auto_clickers = 0
-if "click_multiplier" not in st.session_state:
-    st.session_state.click_multiplier = 1
+if "auto_clicker_cost" not in st.session_state:
+    st.session_state.auto_clicker_cost = 100
 if "shop_message" not in st.session_state:
     st.session_state.shop_message = ""
 
@@ -86,34 +87,34 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Shop logic
-def shop():
-    st.write("### Shop")
+# Auto-clicker functionality
+def auto_click():
+    st.session_state.click_count += st.session_state.auto_clickers
+    st.session_state.points += st.session_state.auto_clickers
+    Timer(1, auto_click).start()  # Auto-click every second
+
+# Start auto-clicker thread if not already started
+if "auto_clicker_active" not in st.session_state:
+    st.session_state.auto_clicker_active = True
+    auto_click()
+
+# Shop logic for auto-clickers
+def auto_clicker_shop():
+    st.write("### Auto-Clicker Menu")
     st.write(f"**Points:** {st.session_state.points}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Buy Auto-Clicker (Cost: 100 points)"):
-            if st.session_state.points >= 100:
-                st.session_state.auto_clickers += 1
-                st.session_state.points -= 100
-                st.session_state.shop_message = "Bought an Auto-Clicker!"
-            else:
-                st.session_state.shop_message = "Not enough points for an Auto-Clicker."
-    with col2:
-        if st.button("Buy Click Multiplier (Cost: 200 points)"):
-            if st.session_state.points >= 200:
-                st.session_state.click_multiplier += 1
-                st.session_state.points -= 200
-                st.session_state.shop_message = "Bought a Click Multiplier!"
-            else:
-                st.session_state.shop_message = "Not enough points for a Click Multiplier."
+    st.write(f"**Auto-Clickers Owned:** {st.session_state.auto_clickers}")
+    st.write(f"**Next Auto-Clicker Cost:** {st.session_state.auto_clicker_cost} points")
+
+    if st.button("Buy Auto-Clicker"):
+        if st.session_state.points >= st.session_state.auto_clicker_cost:
+            st.session_state.points -= st.session_state.auto_clicker_cost
+            st.session_state.auto_clickers += 1
+            st.session_state.auto_clicker_cost = int(st.session_state.auto_clicker_cost * 1.5)  # Exponential cost
+            st.session_state.shop_message = "Successfully purchased an Auto-Clicker!"
+        else:
+            st.session_state.shop_message = "Not enough points for an Auto-Clicker."
 
     st.info(st.session_state.shop_message)
-
-# Handle auto-clicking
-def handle_auto_clicking():
-    st.session_state.points += st.session_state.auto_clickers * st.session_state.click_multiplier
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -129,7 +130,7 @@ st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**
 
 if st.button("Click to try your luck"):
     st.session_state.click_count += 1
-    st.session_state.points += st.session_state.click_multiplier
+    st.session_state.points += 1
     user_number = random.randint(1, 1000000)
     winning_number = random.randint(1, 1000000)
     st.write(f"🎲 Your number: **{user_number}**")
@@ -145,11 +146,8 @@ if st.button("Click to try your luck"):
     else:
         st.error("Not this time! Better luck next time!")
 
-# Display shop
-shop()
-
-# Handle auto-clickers
-handle_auto_clicking()
+# Display auto-clicker menu
+auto_clicker_shop()
 
 # User Message Input
 st.write("---")
