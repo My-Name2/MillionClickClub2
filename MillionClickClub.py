@@ -79,6 +79,8 @@ if "click_count" not in st.session_state:
     st.session_state.click_count = 0
 if "link_generated" not in st.session_state:
     st.session_state.link_generated = False
+if "invite_link" not in st.session_state:
+    st.session_state.invite_link = None
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -102,12 +104,17 @@ if not st.session_state.link_generated:
         st.write(f"🏆 Winning number: **{winning_number}**")
         if user_number == winning_number:
             st.success("🎉 You won! Generating your invite...")
-            st.session_state.link_generated = True  # Mark the link as generated immediately
-            st.experimental_rerun()  # Force UI to rerun to remove the button
+            time.sleep(2)
+            try:
+                st.session_state.invite_link = create_invite()
+                st.session_state.link_generated = True  # Mark the link as generated
+            except Exception as e:
+                st.error(f"Error generating invite: {e}")
         else:
             st.error("Not this time! Better luck next time!")
 else:
-    st.info("A link has already been generated. Refresh the page to try again.")
+    st.write(f"[🎉 Your Invite Link: Click here to join the Discord!]({st.session_state.invite_link})")
+    st.info("You already generated an invite! Refresh the page to try again.")
 
 # User Message Input
 st.write("---")
