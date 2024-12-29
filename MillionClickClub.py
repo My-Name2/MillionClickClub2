@@ -96,8 +96,8 @@ st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**
 if st.button("Click to try your luck"):
     if not st.session_state.link_generated:  # No invite generated yet
         st.session_state.click_count += 1
-        user_number = random.randint(1, 1000000)
-        winning_number = random.randint(1, 1000000)
+        user_number = random.randint(1, 2)
+        winning_number = random.randint(1, 2)
         st.write(f"🎲 Your number: **{user_number}**")
         st.write(f"🏆 Winning number: **{winning_number}**")
         if user_number == winning_number:
