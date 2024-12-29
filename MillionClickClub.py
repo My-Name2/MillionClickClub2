@@ -61,7 +61,7 @@ def create_invite():
         "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
         "Content-Type": "application/json"
     }
-    payload = {"max_age": 10, "max_uses": 1}
+    payload = {"max_age": 30, "max_uses": 1}
 
     response = requests.post(url, headers=headers, json=payload)
 
@@ -88,7 +88,7 @@ if "winning_number" not in st.session_state:
 st.title("MillionClickClub")
 st.write(
     "Click the button below for a **1 in 1,000,000** chance to join the exclusive Discord club. "
-    "If you win, you'll get a one-time-use invite link valid for 10 seconds!"
+    "If you win, you'll get a one-time-use invite link valid for 30 seconds!"
 )
 
 # Calculate likelihood
