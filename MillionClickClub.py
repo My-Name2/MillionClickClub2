@@ -159,5 +159,3 @@ if st.button("Send Message"):
             st.error(error_message)
     else:
         st.error("Message cannot be empty!")
-
-
