@@ -87,6 +87,30 @@ st.write(
     "If you win, you'll get a one-time-use invite link valid for 30 seconds!"
 )
 
+# Initialize message count in session state
+if "message_count" not in st.session_state:
+    st.session_state.message_count = 0
+
+# Function to get the number of members in the Discord server
+def get_member_count():
+    guild_id = st.secrets["DISCORD_GUILD_ID"]  # Guild/Server ID from secrets
+    url = f"https://discord.com/api/v10/guilds/{guild_id}"
+    headers = {"Authorization": f"Bot {DISCORD_BOT_TOKEN}"}
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        guild_data = response.json()
+        return guild_data.get("approximate_member_count", "N/A")
+    else:
+        error = response.json()
+        st.error(f"Failed to fetch member count: {response.status_code} - {error.get('message', 'Unknown error')}")
+        return "N/A"
+
+# Display Discord server stats
+member_count = get_member_count()
+st.write(f"👥 **Discord Members:** {member_count}")
+st.write(f"📨 **Messages Sent via Bot:** {st.session_state.message_count}")
+
 # Calculate likelihood
 st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
@@ -128,10 +152,12 @@ if st.button("Send Message"):
             try:
                 send_message_to_channel(user_message, username=user_name)
                 st.success("Message sent to the server!")
+                st.session_state.message_count += 1  # Increment message count
             except Exception as e:
                 st.error(f"Failed to send message: {e}")
         else:
             st.error(error_message)
     else:
         st.error("Message cannot be empty!")
+
 
