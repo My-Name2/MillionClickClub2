@@ -92,12 +92,12 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-# Disable button if a link has already been generated
+# Button logic
 if not st.session_state.link_generated:
     if st.button("Click to try your luck"):
         st.session_state.click_count += 1
-        user_number = random.randint(1, 2)
-        winning_number = random.randint(1, 2)
+        user_number = random.randint(1, 1000000)
+        winning_number = random.randint(1, 1000000)
         st.write(f"🎲 Your number: **{user_number}**")
         st.write(f"🏆 Winning number: **{winning_number}**")
         if user_number == winning_number:
@@ -105,14 +105,14 @@ if not st.session_state.link_generated:
             time.sleep(2)
             try:
                 invite_link = create_invite()
-                st.session_state.link_generated = True  # Mark the link as generated
+                st.session_state.link_generated = True  # Mark the link as generated immediately
                 st.write(f"[Click here to join the Discord!]({invite_link})")
             except Exception as e:
                 st.error(f"Error generating invite: {e}")
         else:
             st.error("Not this time! Better luck next time!")
 else:
-    st.info("You already generated an invite! Refresh the page to try again.")
+    st.info("A link has already been generated. Refresh the page to try again.")
 
 # User Message Input
 st.write("---")
