@@ -79,6 +79,10 @@ if "click_count" not in st.session_state:
     st.session_state.click_count = 0
 if "link_generated" not in st.session_state:
     st.session_state.link_generated = False
+if "invite_link" not in st.session_state:
+    st.session_state.invite_link = None
+if "winning_number" not in st.session_state:
+    st.session_state.winning_number = None
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -90,7 +94,7 @@ st.write(
 # Calculate likelihood
 st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
-st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
+st.write(f"\ud83d\udcca Your current likelihood of winning: **{probability * 100:.6f}%**")
 
 # Main button logic
 if st.button("Click to try your luck"):
@@ -98,15 +102,15 @@ if st.button("Click to try your luck"):
         st.session_state.click_count += 1
         user_number = random.randint(1, 2)
         winning_number = random.randint(1, 2)
-        st.write(f"🎲 Your number: **{user_number}**")
-        st.write(f"🏆 Winning number: **{winning_number}**")
+        st.write(f"\ud83c\udfb2 Your number: **{user_number}**")
+        st.write(f"\ud83c\udfc6 Winning number: **{winning_number}**")
         if user_number == winning_number:
-            st.success("🎉 You won! Generating your invite...")
-            time.sleep(0)
+            st.success("\ud83c\udf89 You won! Generating your invite...")
             try:
                 invite_link = create_invite()
                 st.session_state.link_generated = True
-                st.session_state.invite_link = invite_link  # Store the invite link in session state
+                st.session_state.invite_link = invite_link
+                st.session_state.winning_number = winning_number  # Save the winning number
                 st.write(f"[Click here to join the Discord!]({invite_link})")
             except Exception as e:
                 st.error(f"Error generating invite: {e}")
@@ -114,8 +118,10 @@ if st.button("Click to try your luck"):
             st.error("Not this time! Better luck next time!")
     else:  # Invite already generated
         st.info("You already generated an invite! Here it is again:")
-        st.write(f"🏆 Winning number: **{st.session_state.winning_number}**")
+        if st.session_state.winning_number is not None:
+            st.write(f"\ud83c\udfc6 Winning number: **{st.session_state.winning_number}**")
         st.write(f"[Click here to join the Discord!]({st.session_state.invite_link})")
+
 # User Message Input
 st.write("---")
 st.write("### Send a Message to the Server")
@@ -134,4 +140,3 @@ if st.button("Send Message"):
             st.error(error_message)
     else:
         st.error("Message cannot be empty!")
-
