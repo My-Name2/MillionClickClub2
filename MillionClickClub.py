@@ -102,13 +102,8 @@ if not st.session_state.link_generated:
         st.write(f"🏆 Winning number: **{winning_number}**")
         if user_number == winning_number:
             st.success("🎉 You won! Generating your invite...")
-            time.sleep(2)
-            try:
-                invite_link = create_invite()
-                st.session_state.link_generated = True  # Mark the link as generated immediately
-                st.write(f"[Click here to join the Discord!]({invite_link})")
-            except Exception as e:
-                st.error(f"Error generating invite: {e}")
+            st.session_state.link_generated = True  # Mark the link as generated immediately
+            st.experimental_rerun()  # Force UI to rerun to remove the button
         else:
             st.error("Not this time! Better luck next time!")
 else:
