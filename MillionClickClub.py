@@ -3,6 +3,7 @@ import random
 import time
 import requests
 import re
+from datetime import datetime, timedelta
 
 # Load Discord bot token and channel ID from Streamlit secrets
 DISCORD_BOT_TOKEN = st.secrets["DISCORD_BOT_TOKEN"]
@@ -14,6 +15,20 @@ PROHIBITED_PATTERNS = [
     r"https?://[^\s]+",  # Matches URLs (http:// or https://)
     r"\.(jpg|png|gif|jpeg|bmp|webp)$"  # Matches image file extensions
 ]
+
+# Initialize session state variables
+if "click_count" not in st.session_state:
+    st.session_state.click_count = 0
+if "points" not in st.session_state:
+    st.session_state.points = 0
+if "auto_clickers" not in st.session_state:
+    st.session_state.auto_clickers = 0
+if "click_multiplier" not in st.session_state:
+    st.session_state.click_multiplier = 1
+if "cooldown_until" not in st.session_state:
+    st.session_state.cooldown_until = None
+if "shop_message" not in st.session_state:
+    st.session_state.shop_message = ""
 
 # Function to validate a message
 def validate_message(message):
@@ -74,9 +89,43 @@ def create_invite():
         error = response.json()
         raise Exception(f"Failed to create invite: {response.status_code} - {error.get('message', 'Unknown error')}")
 
-# Initialize session state variables
-if "click_count" not in st.session_state:
-    st.session_state.click_count = 0
+# Function to handle random events
+def random_event():
+    event_roll = random.randint(1, 100)
+    if event_roll <= 5:  # 5% chance for a random event
+        cooldown_time = random.randint(5, 15)  # Cooldown for 5 to 15 seconds
+        st.session_state.cooldown_until = datetime.now() + timedelta(seconds=cooldown_time)
+        return f"A random event occurred! Clicking is disabled for {cooldown_time} seconds."
+    return None
+
+# Shop logic
+def shop():
+    st.write("### Shop")
+    st.write(f"**Points:** {st.session_state.points}")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Buy Auto-Clicker (Cost: 100 points)"):
+            if st.session_state.points >= 100:
+                st.session_state.auto_clickers += 1
+                st.session_state.points -= 100
+                st.session_state.shop_message = "Bought an Auto-Clicker!"
+            else:
+                st.session_state.shop_message = "Not enough points for an Auto-Clicker."
+    with col2:
+        if st.button("Buy Click Multiplier (Cost: 200 points)"):
+            if st.session_state.points >= 200:
+                st.session_state.click_multiplier += 1
+                st.session_state.points -= 200
+                st.session_state.shop_message = "Bought a Click Multiplier!"
+            else:
+                st.session_state.shop_message = "Not enough points for a Click Multiplier."
+
+    st.info(st.session_state.shop_message)
+
+# Handle auto-clicking
+def handle_auto_clicking():
+    st.session_state.points += st.session_state.auto_clickers * st.session_state.click_multiplier
 
 # Streamlit frontend
 st.title("MillionClickClub")
@@ -90,22 +139,40 @@ st.write(f"Total clicks so far: **{st.session_state.click_count}**")
 probability = 1 - ((999999 / 1000000) ** st.session_state.click_count)
 st.write(f"📊 Your current likelihood of winning: **{probability * 100:.6f}%**")
 
-if st.button("Click to try your luck"):
-    st.session_state.click_count += 1
-    user_number = random.randint(1, 1000000)
-    winning_number = random.randint(1, 1000000)
-    st.write(f"🎲 Your number: **{user_number}**")
-    st.write(f"🏆 Winning number: **{winning_number}**")
-    if user_number == winning_number:
-        st.success("🎉 You won! Generating your invite...")
-        time.sleep(2)
-        try:
-            invite_link = create_invite()
-            st.write(f"[Click here to join the Discord!]({invite_link})")
-        except Exception as e:
-            st.error(f"Error generating invite: {e}")
-    else:
-        st.error("Not this time! Better luck next time!")
+# Check for cooldown
+if st.session_state.cooldown_until and datetime.now() < st.session_state.cooldown_until:
+    st.warning(f"Clicking disabled until {st.session_state.cooldown_until.strftime('%H:%M:%S')}.")
+else:
+    if st.session_state.cooldown_until:
+        st.session_state.cooldown_until = None  # Reset cooldown
+
+    if st.button("Click to try your luck"):
+        random_event_message = random_event()
+        if random_event_message:
+            st.warning(random_event_message)
+        else:
+            st.session_state.click_count += 1
+            st.session_state.points += st.session_state.click_multiplier
+            user_number = random.randint(1, 1000000)
+            winning_number = random.randint(1, 1000000)
+            st.write(f"🎲 Your number: **{user_number}**")
+            st.write(f"🏆 Winning number: **{winning_number}**")
+            if user_number == winning_number:
+                st.success("🎉 You won! Generating your invite...")
+                time.sleep(2)
+                try:
+                    invite_link = create_invite()
+                    st.write(f"[Click here to join the Discord!]({invite_link})")
+                except Exception as e:
+                    st.error(f"Error generating invite: {e}")
+            else:
+                st.error("Not this time! Better luck next time!")
+
+# Display shop
+shop()
+
+# Handle auto-clickers
+handle_auto_clicking()
 
 # User Message Input
 st.write("---")
