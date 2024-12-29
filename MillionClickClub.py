@@ -114,8 +114,8 @@ if st.button("Click to try your luck"):
             st.error("Not this time! Better luck next time!")
     else:  # Invite already generated
         st.info("You already generated an invite! Here it is again:")
+        st.write(f"🏆 Winning number: **{st.session_state.winning_number}**")
         st.write(f"[Click here to join the Discord!]({st.session_state.invite_link})")
-
 # User Message Input
 st.write("---")
 st.write("### Send a Message to the Server")
